@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Test</title>
+<script>
+function stitch(bytes)
+{
+  console.log("stitch" + bytes)
+}
+
+function read_next(arg) {
+  console.log("read_next" + arg);
+  let done = arg.done;
+  let value = arg.value;
+  if (done) {
+    controller.close
+  }
+  push();
+}
+
+function split_fetched(readers)
+{
+  let i = 0;
+  return new ReadableStream({
+    start(controller) {
+      function push() {
+          console.log(readers[i]);
+          readers[i].read().then(
+            function ({done, value}) {
+              if (done) {
+                console.log("done", done);
+                i++;
+                if (i == readers.length) {
+                  controller.close();
+                  return;
+		}
+                push();
+                return;
+	      }
+              controller.enqueue(value);
+              console.log(done, value);
+              push();
+            }
+          );
+      }
+      push();
+    },
+  });
+}
+
+function url_map(arg)
+{
+  console.log("url_map" + arg);
+  return fetch(arg).then(function (res) { return res.body.getReader() });
+}
+
+function fetched(res)
+{
+  console.log("fetched:")
+	res.getReader().then(function(e) { console.log(e); });
+}
+
+let urls = [ "data:application/gzip;bas64,eaGVsbG8=", "data:application/gzip;base64,IA==", "data:application/gzip;base64,d29ybGQ=" ];
+Promise.all(urls.map(url_map)).then(split_fetched).then(fetched)
+</script>
+</head>
+</body>
+</html>

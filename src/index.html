@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>cadstle</title>
+<script src="tarball.js">
+</script>
+<script>
+
+function run() {
+  requires([ "./program.js", "./prag.js", "./vbo.js", "./matrix.js", "./IntelOneMono-Regular.glf.js", "./sys.js", "./gl.js", "./glf.js", "./nuklear.js", "./handler.js", "./tex.js", "./shader.js", "./stlviewer.js" ]);
+  dataurls([ "./nuklear.wasm" ]);
+}
+
+var g = {
+
+  modules_i: 0,
+  modules_n: 9999,
+  modules: { },
+
+  dataurls_i: 0,
+  dataurls_n: 9999,
+  dataurls: { },
+
+  finished_cb: function() { main(); },
+  is_staging: true,
+  tar_hash: { },
+  manifest_urls: [ ],
+  manifest_url_i: 0,
+  manifest_chunks: [ ],
+
+  gl: null,
+}
+
+let add_fx = function(object, tag)
+{
+  this.fxs.push({ object, tag });
+}
+
+let run_fxs = function(tag, args)
+{
+  for (let i=0; i<this.fxs.length; i++) {
+    if (this.fxs[i].tag == tag) {
+      this.fxs[i].object[tag](args);
+    }
+  }
+}
+
+function add_fxs(import_object, fxs)
+{
+  let keys = Object.keys(fxs);
+  for (let i=0; i<keys.length; i++) {
+    let key = keys[i];
+    import_object.env[key] = fxs[key];
+  }
+}
+
+let memory_grow = function(npages) {
+  g.wasm_memory.grow(npages);
+  g.memory = new Uint8Array(g.wasm_memory.buffer);
+}
+
+function handler_subscribe()
+{
+  g.handler.subscribe(g.nuklear, "mousemove");
+  g.handler.subscribe(g.nuklear, "mousedown");
+  g.handler.subscribe(g.nuklear, "mouseup");
+  g.handler.subscribe(g.nuklear, "keydown");
+  g.handler.subscribe(g.nuklear, "keyup");
+  g.handler.subscribe(g.nuklear, "wheel");
+}
+
+function main()
+{
+  let sysjs        = g.modules["./sys.js"].sysjs(g);
+  g.handler        = g.modules["./handler.js"].handler();
+  g.gl             = g.modules["./gl.js"].gl("canvas");
+  g.glf_json       = g.modules["./IntelOneMono-Regular.glf.js"].IntelOneMono_Regular;
+  g.matrix         = g.modules["./matrix.js"].matrix;
+  g.Matrix         = g.modules["./matrix.js"].Matrix;
+  g.Program        = g.modules["./program.js"].Program;
+  g.Prag           = g.modules["./prag.js"].Prag;
+  g.VBO            = g.modules["./vbo.js"].VBO;
+  g.glf            = g.modules["./glf.js"].glf(g.glf_json, g);
+  g.nuklear        = g.modules["./nuklear.js"].nuklear(g);
+  g.tex            = g.modules["./tex.js"].tex(g);
+  g.shader         = g.modules["./shader.js"].shader(g);
+  g.stlviewer      = g.modules["./stlviewer.js"].stlviewer(g);
+
+  g.handler.subscribe(g.gl, "resize");
+
+  g.gl.subscribe(g.glf,     "init");
+  g.gl.subscribe(g.glf,     "resize");
+
+  let memory      = new WebAssembly.Memory({ initial: 5, maximum: 1000, shared: true });
+  const import_object= {
+    js: { mem: memory },
+    env: {
+      memory:     memory,
+      memoryBase: 0,
+    }
+  };
+  add_fxs(import_object, sysjs);
+  add_fxs(import_object, g.nuklear.nk_fxs);
+
+  g.gl.subscribe(g.nuklear,   "resize");
+  g.gl.subscribe(g.nuklear,   "init");
+  g.gl.subscribe(g.nuklear,   "display");
+  g.gl.subscribe(g.tex,       "init");
+  g.gl.subscribe(g.tex,       "resize");
+  g.gl.subscribe(g.shader,    "init");
+  g.gl.subscribe(g.shader,    "resize");
+  g.gl.subscribe(g.stlviewer, "init");
+  g.gl.subscribe(g.stlviewer, "resize");
+
+  g.import_object = import_object;
+
+  WebAssembly.instantiateStreaming(
+    fetch(g.dataurls["./nuklear.wasm"]),
+    import_object).then(
+      function (obj) {
+        g.wasm = obj;
+        g.wasm_memory = obj.instance.exports.memory;
+        g.memory = new Uint8Array(g.wasm_memory.buffer);
+        g.memory_grow = memory_grow;
+        g.nuklear.wasm = obj;
+        g.gl.init();
+        g.gl.display();
+        handler_subscribe();
+    }
+  )
+}
+
+function start_check()
+{
+  if (g.modules_i == g.modules_n && g.dataurls_i == g.dataurls_n) {
+    loadlog("finished!");
+    g.finished_cb();
+  }
+}
+
+function require(filename)
+{
+  let require_cb = function(text)
+  {
+    let module = { exports: { } };
+    eval(text);
+    g.modules[filename] = module.exports;
+    g.modules_i++;
+    start_check();
+  };
+  loadlog("Loading required " + filename);
+  if (g.is_staging) {
+    fetch(filename).then(function(resp) { return resp.text(); }).then(require_cb);
+  } else {
+    g.tar_hash[filename].text().then(require_cb);
+  }
+}
+
+function requires(filenames)
+{
+  let n = filenames.length;
+  g.modules_n = n;
+  for (let i=0; i<n; i++) {
+    require(filenames[i]);
+  }
+}
+
+function dataurl(filename)
+{
+  let dataurl_cb = function(blob)
+  {
+    let reader = new FileReader();
+    reader.onload = function (e) {
+        let url = e.target.result;
+        if (url.substr(0,29) == "data:application/octet-stream") {
+          let tmp = url.substr(29);
+	  if (filename.endsWith(".png")) {
+            url = "data:image/png" + tmp;
+	  } else {
+            url = "data:application/wasm" + tmp;
+	  }
+	}
+        loadlog("Loading dataurl " + filename);
+        g.dataurls[filename] = url;
+        g.dataurls_i++;
+        start_check();
+    }
+    reader.readAsDataURL(blob);
+  };
+  if (g.is_staging) {
+    fetch(filename).then(function(resp) { return resp.blob(); }).then(dataurl_cb);
+  } else {
+    dataurl_cb(g.tar_hash[filename]);
+  }
+}
+
+function dataurls(filenames)
+{
+  let n = filenames.length;
+  g.dataurls_n = n;
+  for (let i=0; i<n; i++) {
+    dataurl(filenames[i]);
+  }
+}
+
+function gunzip_resp(response)
+{
+    return response.body.pipeThrough(new DecompressionStream("gzip"));
+}
+
+function readable_stream_to_blob(readable_stream)
+{
+    return new Response(readable_stream).blob();
+}
+
+function tar_from_blob(blob)
+{
+    tar = new tarball.TarReader();
+    return tar.readFile(blob);
+
+}
+
+function tar_hash(tar_array)
+{
+    for (let i=0; i<tar_array.length; i++) {
+        let filename = tar_array[i].name;
+        g.tar_hash[filename] = tar.getFileBlob(filename);
+    }
+    run();
+}
+
+function url_map(arg)
+{
+  return fetch(arg)
+         .then(function (res) { return res.arrayBuffer(); })
+	
+}
+
+function blob_from_readable_stream(stream)
+{
+  let resp = new Response(stream);
+  let blob = resp.blob();
+  return blob;
+}
+
+function text_from_blob(blob)
+{
+  return blob.text();
+}
+
+function loadlog(s)
+{
+  let loading_el = document.getElementById("loading");
+  let log_entry =  document.createElement("li");
+  log_entry.innerText = s;
+  loading_el.appendChild(log_entry);
+}
+
+function input_chunk(buf, buflen)
+{
+  if (g.manifest_url_i == g.manifest_urls.length) {
+    console.error("input_chunk reqested, but there are no more");
+    return 0;
+  }
+  let url = g.manifest_urls[g.manifest_url_i];
+  if (url.length > buflen) {
+    console.error("input_chunk has insufficient size to add next chunk");
+    return 0;
+  }
+  for (let i=0; i<url.length; i++) {
+    g.memory[buf + i] = url[i];
+  }
+  g.manifest_url_i++;
+  loadlog("Chunk " + g.manifest_url_i + "/" + g.manifest_urls.length);
+  return url.length;
+}
+
+function output_chunk(buf, buflen)
+{
+  let u8arr = new Uint8Array(buflen);
+  for (let i=0; i<buflen; i++) {
+    u8arr[i] = g.memory[buf + i];
+  }
+  g.manifest_chunks.push(u8arr);
+  return;
+}
+
+function wasmalloc(i32_1)
+{
+  let size = i32_1;
+  size = ((size + 7)  >> 3) << 3;
+  if (g.memory_start == undefined) {
+    g.memory_start = g.memory.length;
+    g.memory_head = g.memory_start;
+    g.memory_end = g.memory_start;
+    g.memory_allocd = { };
+    g.memory_freed = { };
+    g.memory_freed_adj = { };
+  }
+  let off = g.memory_head;
+  g.memory_head = g.memory_head + size;
+  if (g.memory_head > g.memory_end) {
+    let additional_bytes_needed = g.memory_head - g.memory_end;
+    /* 1 page = 65,536 bytes */
+    npages = (65535 + additional_bytes_needed) / 65536;
+    g.memory_grow(npages);
+    g.memory_end = g.memory.length;
+  }
+  g.memory_allocd[off] = size;
+  return off;
+}
+
+function zlibaux(dataurl)
+{
+  let memory      = new WebAssembly.Memory({ initial: 5, maximum: 1000, shared: true });
+  const import_object= {
+    js: { mem: memory },
+    env: {
+      memory:     memory,
+      memoryBase: 0,
+      input_chunk: input_chunk,
+      output_chunk: output_chunk,
+      wasmalloc: wasmalloc,
+    }
+  };
+  WebAssembly.instantiateStreaming(
+    fetch(dataurl),
+    import_object).then(
+      function (obj) {
+        g.wasm_memory = obj.instance.exports.memory;
+        g.memory = new Uint8Array(g.wasm_memory.buffer);
+        g.memory_grow = memory_grow;
+	obj.instance.exports.zlibaux_wasm_main();
+        g.memory_start = undefined; /* reset for next */
+        tar_from_blob(new Blob(g.manifest_chunks))
+        .then(tar_hash)
+    }
+  )
+}
+
+function tar_zxf()
+{
+  let inflate_url =
+"zlibaux.wasm.b64.gz.b64"
+;
+  fetch(inflate_url)
+  .then(gunzip_resp)
+  .then(blob_from_readable_stream)
+  .then(text_from_blob)
+  .then(zlibaux)
+}
+
+function assign_manifest_urls(val)
+{
+  let i;
+  g.manifest_urls = [];
+  for (i=0; i<val.length; i++) {
+    g.manifest_urls[i] = new Uint8Array(val[i]);
+  }
+}
+
+function start() {
+  let urls = [
+"manifest.tar.gzip"
+  ];
+  if (!g.is_staging) {
+    Promise.all(urls.map(url_map))
+    .then(assign_manifest_urls)
+    .then(tar_zxf)
+  } else {
+    run();
+  }
+}
+</script>
+</head>
+<body>
+<h1>Loading</h1>
+<ul id="loading">
+</ul>
+<canvas id="canvas" style="position: absolute; right: 0px; bottom: 0px;">
+</canvas>
+<div id="target">
+<script>
+/* window.onload doesn't work as expected on mobile.
+ * workaround by executing this at end */
+start();
+</script>
+</div>
+</body>
+</html>

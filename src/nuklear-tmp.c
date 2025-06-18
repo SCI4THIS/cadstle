@@ -1,0 +1,2 @@
+int stdout = 1;
+

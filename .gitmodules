@@ -1,0 +1,9 @@
+[submodule "zlib-wasm"]
+	path = zlib-wasm
+	url = https://github.com/SCI4THIS/zlib-wasm
+[submodule "tarballjs"]
+	path = tarballjs
+	url = https://github.com/ankitrohatgi/tarballjs
+[submodule "Nuklear"]
+	path = Nuklear
+	url = https://github.com/Immediate-Mode-UI/Nuklear
