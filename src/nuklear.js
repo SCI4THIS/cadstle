@@ -177,6 +177,10 @@ function lookup_button(button)
   switch (button) {
     case 0:
       return 0; /* NK_BUTTON_LEFT */
+    case 1:
+      return 1; /* NK_BUTTON_MIDDLE */
+    case 2:
+      return 2; /* NK_BUTTON_RIGHT */
   }
   return 0;
 }

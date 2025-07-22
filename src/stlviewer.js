@@ -110,10 +110,14 @@ let init = function()
   this.prog["bg"] = this.create_prog_bg(this.gl);
   this.prag["bg"] = this.create_prag_bg(this.gl, this.m.caM._data, this.vbo["bg"]);
 
+  this.cam.init();
+  this.cam.glFrustum(-10, 10, -10, 10, 5, 100);
+  this.cam.gluLookAt(-5, 3, -20, 0, 3, 0, 0, 1, 0);
+
   this.m["stl"] = this.g.matrix(Float32Array, 6, 0);
   this.vbo["stl"] = this.g.VBO({gl: this.gl, m: this.m["stl"]});
   this.prog["stl"] = this.create_prog_stl(this.gl);
-  this.prag["stl"] = this.create_prag_stl(this.gl, this.m.caM._data, this.vbo["stl"]);
+  this.prag["stl"] = this.create_prag_stl(this.gl, this.cam.caM()._data, this.vbo["stl"]);
   this.arrbuf = new ArrayBuffer(4);
   this.dataview = new DataView(this.arrbuf);
 }
@@ -129,6 +133,7 @@ let resize = function({width, height})
   }
   this.height = height;
   this.width = width;
+  this.cam.resize({width, height})
 }
 
 let draw_quad = function(arg)
@@ -192,7 +197,6 @@ let set_stl = function(arr)
 
 let input = function(input_arr)
 {
-  console.log(input_arr);
 }
 
 let stlviewer = function(g)
@@ -218,6 +222,7 @@ let stlviewer = function(g)
     create_prog_stl: create_prog_stl,
     create_prag_bg: create_prag_bg,
     create_prog_bg: create_prog_bg,
+    cam: g.camera(g), 
   };
 }
 

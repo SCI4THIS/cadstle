@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <math.h>
+//#include <math.h>
 #include <stdio.h>
 
 #define NAV_WIDTH (300)
@@ -33,6 +33,9 @@ extern unsigned char *Noise3DTexPtr;
 extern int Noise3DTexSize;
 extern void cadstle_download(uint32_t size, stl_t *stl);
 extern void cadstle_set_stl_gl(void *stl, uint32_t len);
+extern float cosf(float);
+extern float sinf(float);
+const float M_PI = 3.14159265358979323846264338327950288f;
 
 void set_style_local(struct nk_context *ctx)
 {
@@ -238,17 +241,33 @@ void nk_app_parameters(struct nk_context *ctx, int width, int height, generator_
 
 void nk_app_viewer(struct nk_context *ctx, int width, int height, generator_t gen_id, stl_t *stl)
 {
+  static nk_bool is_mid_btn_dragging = nk_false;
   static nk_bool is_initialized = nk_false;
   static struct nk_image stl_viewer_img = { 0 };
+  struct nk_rect header = nk_rect(NAV_WIDTH, NAV_HEIGHT, width - NAV_WIDTH, height - NAV_HEIGHT);
+  int dy;
 
   if (!is_initialized) {
     stl_viewer_img = nk_image_ptr("stlviewer.glsl");
     is_initialized = nk_true;
   }
   if (nk_group_begin(ctx, "viewer", 0)) {
-     nk_layout_row_dynamic(ctx, height - 1.5 * NAV_HEIGHT, 1);
-     nk_image(ctx, stl_viewer_img);
-     nk_group_end(ctx);
+    if (is_mid_btn_dragging && nk_input_has_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_MIDDLE, header, nk_false)) {
+      is_mid_btn_dragging = nk_false;
+      printf("stlviewer click - done");
+    }
+    if (nk_input_has_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_MIDDLE, header, nk_true)) {
+      is_mid_btn_dragging = nk_true;
+      printf("stlviewer click");
+    } 
+    dy = ctx->input.mouse.scroll_delta.y;
+    if (nk_input_is_mouse_hovering_rect(&ctx->input, header) && dy) {
+      printf("stlviewer scroll: %d\n", dy);
+      ctx->input.mouse.scroll_delta.y = 0;
+    }
+    nk_layout_row_dynamic(ctx, height - 1.5 * NAV_HEIGHT, 1);
+    nk_image(ctx, stl_viewer_img);
+    nk_group_end(ctx);
   }
 }
 

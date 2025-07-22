@@ -7,7 +7,7 @@
 <script>
 
 function run() {
-  requires([ "./program.js", "./prag.js", "./vbo.js", "./matrix.js", "./IntelOneMono-Regular.glf.js", "./sys.js", "./gl.js", "./glf.js", "./nuklear.js", "./handler.js", "./tex.js", "./shader.js", "./stlviewer.js" ]);
+  requires([ "./program.js", "./prag.js", "./vbo.js", "./matrix.js", "./IntelOneMono-Regular.glf.js", "./sys.js", "./gl.js", "./glf.js", "./nuklear.js", "./handler.js", "./tex.js", "./shader.js", "./camera.js", "./stlviewer.js" ]);
   dataurls([ "./nuklear.wasm" ]);
 }
 
@@ -84,6 +84,7 @@ function main()
   g.nuklear        = g.modules["./nuklear.js"].nuklear(g);
   g.tex            = g.modules["./tex.js"].tex(g);
   g.shader         = g.modules["./shader.js"].shader(g);
+  g.camera         = g.modules["./camera.js"].camera;
   g.stlviewer      = g.modules["./stlviewer.js"].stlviewer(g);
 
   g.handler.subscribe(g.gl, "resize");
@@ -114,9 +115,11 @@ function main()
 
   g.import_object = import_object;
 
+  const compileOptions = { };
+
   WebAssembly.instantiateStreaming(
     fetch(g.dataurls["./nuklear.wasm"]),
-    import_object).then(
+    import_object, compileOptions).then(
       function (obj) {
         g.wasm = obj;
         g.wasm_memory = obj.instance.exports.memory;
@@ -152,7 +155,10 @@ function require(filename)
   if (g.is_staging) {
     fetch(filename).then(function(resp) { return resp.text(); }).then(require_cb);
   } else {
-    g.tar_hash[filename].text().then(require_cb);
+    let reader = new FileReader();
+    reader.addEventListener("load", function() { require_cb(reader.result); }, false);
+    //g.tar_hash[filename].text().then(function() { require_cb(reader.result); }, false);
+    reader.readAsText(g.tar_hash[filename]);
   }
 }
 
@@ -205,7 +211,8 @@ function dataurls(filenames)
 
 function gunzip_resp(response)
 {
-    return response.body.pipeThrough(new DecompressionStream("gzip"));
+  return new Response(response.body).blob();
+  //return response.body.pipeThrough(new DecompressionStream("gzip"));
 }
 
 function readable_stream_to_blob(readable_stream)
@@ -217,7 +224,6 @@ function tar_from_blob(blob)
 {
     tar = new tarball.TarReader();
     return tar.readFile(blob);
-
 }
 
 function tar_hash(tar_array)
@@ -343,11 +349,14 @@ function tar_zxf()
   let inflate_url =
 "zlibaux.wasm.b64.gz.b64"
 ;
+  zlibaux(inflate_url)
+/*
   fetch(inflate_url)
   .then(gunzip_resp)
-  .then(blob_from_readable_stream)
+  //.then(blob_from_readable_stream)
   .then(text_from_blob)
   .then(zlibaux)
+  */
 }
 
 function assign_manifest_urls(val)

@@ -26,16 +26,21 @@ NS_Matrix.identity = function ()
     console.error("Identity matrices must be square");
     return;
   }
-  this.zero()
-  for (let i = 0; i < this._n; i++) {
-    this._data[this.idx(i,i)] = 1;
+  for (let i=0; i<this._n; i++) {
+    for (let j=0; j<this._m; j++) {
+      if (i == j) {
+        this.set(i,j,1);
+      } else {
+        this.set(i,j,0);
+      }
+    }
   }
 }
 
 NS_Matrix.zero = function ()
 {
   for (let i = 0; i < this._length; i++) {
-    this._data[i] = 0;
+    this.set(i, 0);
   }
 }
 
@@ -61,10 +66,11 @@ NS_Matrix.mul = function (A,B)
   for (let i = 0; i < this._n; i++) {
     for (let j = 0; j < this._m; j++) {
       let ix = this.idx(i,j)
-      this._data[ix] = 0;
+      let tmp = 0;
       for (let k = 0; k < this._n; k++) {
-        this._data[ix] += A._data[A.idx(i,k)] * B._data[B.idx(k,j)];
+        tmp += A._data[A.idx(i,k)] * B._data[B.idx(k,j)];
       }
+      this.set(ix, tmp);
     }
   }
 }
@@ -80,7 +86,7 @@ NS_Matrix.sub = function (u,v)
     return;
   }
   for (let i = 0; i < this._length; i++) {
-    this._data[i] = u._data[i] - v._data[i];
+    this.set(i, u._data[i] - v._data[i]);
   }
   this._decomposed = false;
 }
@@ -96,7 +102,7 @@ NS_Matrix.add = function (u,v)
     return;
   }
   for (let i = 0; i < this._length; i++) {
-    this._data[i] = u._data[i] + v._data[i];
+    this.set(i, u._data[i] + v._data[i]);
   }
   this._decomposed = false;
 }
@@ -120,11 +126,18 @@ NS_Matrix.transpose = function (M)
 
 NS_Matrix.set = function (i,j,v)
 {
-  if (v != undefined) {
-    this._data[i + this._n * j] = v;
+  let ix;
+  if (v == undefined) {
+    v = j;
+    ix = i;
   } else {
-    this._data[i] = j;
+    ix = i + this._n * j;
   }
+  if (this._data[ix] == v) {
+    return;
+  }
+  this._data[ix] = v;
+  this.version++;
 }
 
 NS_Matrix.get2 = function (i,j)
@@ -287,7 +300,8 @@ function matrix(type, n, m)
     determinant: NS_Matrix.determinant,
     decompose: NS_Matrix.decompose,
     invert: NS_Matrix.invert,
-    print: NS_Matrix.print
+    print: NS_Matrix.print,
+    version: 0,
   }
   if (n === m) {
     mat._lu = new type(length)

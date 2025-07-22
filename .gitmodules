@@ -7,3 +7,6 @@
 [submodule "Nuklear"]
 	path = Nuklear
 	url = https://github.com/Immediate-Mode-UI/Nuklear
+[submodule "wasm3"]
+	path = wasm3
+	url = https://github.com/wasm3/wasm3

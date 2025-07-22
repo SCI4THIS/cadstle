@@ -2,7 +2,7 @@
 
 mkdir -p tar-staging
 
-for file in "prag.js" "vbo.js" "matrix.js" "nuklear.wasm" "sys.js" "gl.js" "program.js" "glf.js" "nuklear.js" "handler.js" "tex.js" "IntelOneMono-Regular.glf.js" "shader.js" "stlviewer.js"
+for file in "prag.js" "vbo.js" "matrix.js" "nuklear.wasm" "sys.js" "gl.js" "program.js" "glf.js" "nuklear.js" "handler.js" "tex.js" "IntelOneMono-Regular.glf.js" "shader.js" "stlviewer.js" "camera.js"
 do
   cp src/${file} tar-staging/${file}
 done
@@ -29,9 +29,9 @@ do
 
 done
 
-echo "data:application/wasm;base64,`base64 --wrap=0 zlib-wasm/zlibaux.wasm`" > zlibaux.wasm.b64
-gzip -f zlibaux.wasm.b64
-echo "\"data:application/gzip;base64,`base64 --wrap=0 zlibaux.wasm.b64.gz`\"" > zlibaux.wasm.b64.gz.b64
+echo "\"data:application/wasm;base64,`base64 --wrap=0 zlib-wasm/zlibaux.wasm`\"" > zlibaux.wasm.b64
+#gzip -f zlibaux.wasm.b64
+#echo "\"data:application/gzip;base64,`base64 --wrap=0 zlibaux.wasm.b64.gz`\"" > zlibaux.wasm.b64.gz.b64
 
 sed -f amalgamate_tarballjs.sed src/index.html > tmp1.js
 sed -f amalgamate_manifest.tar.gzip.sed tmp1.js > tmp2.js
@@ -45,5 +45,4 @@ rm tmp1.js
 rm manifest.tar.gzip.b64
 rm manifest.tar.gzip.part-*
 rm src/manifest.tar.gzip
-rm zlibaux.wasm.b64
-rm zlibaux.wasm.b64.gz.b64
+#rm zlibaux.wasm.b64.gz.b64
