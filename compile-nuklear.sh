@@ -12,12 +12,14 @@ rm ${BUILD_DIR}/*
 
 for FILE in Noise nuklear-tmp cadstle nuklear
 do
-  clang -o ${BUILD_DIR}/${FILE}.c.ll -I${SYS_INCLUDE} -Inuklear/ --target=wasm32 -emit-llvm -c -S src/${FILE}.c
+  clang -O3 -o ${BUILD_DIR}/${FILE}.c.ll -I${SYS_INCLUDE} -Inuklear/ --target=wasm32 -emit-llvm -c -S src/${FILE}.c
   llc -o ${BUILD_DIR}/${FILE}.c.ll.o -march=wasm32 -filetype=obj ${BUILD_DIR}/${FILE}.c.ll
 done
 
 ${WASM_LD} --no-entry --import-undefined --export-all -o ${BUILD_DIR}/${NAME}-temp.wasm ${BUILD_DIR}/*.ll.o
 
 ${WASM_2_WAT} ${BUILD_DIR}/${NAME}-temp.wasm > ${BUILD_DIR}/${NAME}.wat
+#./fixup_wat.sh ${BUILD_DIR}/${NAME}.wat > ${BUILD_DIR}/${NAME}-emu.wat
+#${WAT_2_WASM} -o ${BUILD_DIR}/${NAME}.wasm ${BUILD_DIR}/${NAME}-emu.wat
 ${WAT_2_WASM} -o ${BUILD_DIR}/${NAME}.wasm ${BUILD_DIR}/${NAME}.wat
 cp ${BUILD_DIR}/${NAME}.wasm src/${NAME}.wasm

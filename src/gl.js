@@ -30,7 +30,9 @@ let init = function()
     return;
   }
   this.gl = gl_ctx;
+  //this.gl.enable(this.gl.BLEND);
   this.gl.blendFuncSeparate(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA, 0, 1);
+  //this.gl.enable(this.gl.DEPTH_TEST);
   this.publish("init", this.gl);
   this.resize({ width: window.innerWidth, height: window.innerHeight});
 }

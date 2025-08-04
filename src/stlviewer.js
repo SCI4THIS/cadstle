@@ -28,7 +28,7 @@ precision highp float;
 attribute vec2  coord;
 
 void main() {
-  gl_Position = vec4(coord.x, coord.y, -1.0, 1.0);
+  gl_Position = vec4(coord.x, coord.y, 0.99, 1.0);
 }
 `;
 
@@ -77,19 +77,51 @@ precision highp float;
 attribute vec3  pos;
 attribute vec3  norm;
 varying   vec3  norm_varying;
+varying   vec3  vert_pos;
 uniform   mat4  caM;
 
 void main() {
-  norm_varying = norm;
-  gl_Position = caM * vec4(pos.x, pos.y, pos.z, 1.0);
+  vec4 pos_varying4 = caM * vec4(pos, 1.0);
+  vec4 norm_varying4 = caM * vec4(pos + norm, 1.0);
+  //norm_varying = pos;
+  norm_varying = (norm_varying4 - pos_varying4).xyz;
+  //norm_varying = norm_varying4.xyz;
+  vert_pos = pos_varying4.xyz;
+  gl_Position = pos_varying4;
 }
 `;
 
   options.src[gl.FRAGMENT_SHADER] = `
 precision highp float;
 varying vec3 norm_varying;
+varying vec3 vert_pos;
 void main() {
-  gl_FragColor = vec4(0.8, 0.8, 0.8, 1.0);
+  float Ka = 1.0;
+  float Kd = 0.84;
+  float Ks = 0.72;
+  float shininess = 83.0;
+  vec3 ambientColor = vec3(0.3, 0.3, 0.3);
+  vec3 diffuseColor = vec3(0.5, 0.5, 0.5);
+  vec3 specularColor = vec3(1.0, 1.0, 1.0);
+
+  vec3 lightPos = vec3(0, 0, -50);
+  vec3 N = normalize(norm_varying);
+  vec3 L = normalize(lightPos - vert_pos);
+
+  float lambertian = max(dot(N, L), 0.0);
+  float specular = 0.0;
+  if (lambertian > 0.0) {
+    vec3 R = reflect(-L, N);
+    vec3 V = normalize(-vert_pos);
+    float specAngle = max(dot(R, V), 0.0);
+    specular = pow(specAngle, shininess);
+  }
+  gl_FragColor = vec4(norm_varying, 1.0);
+  /*
+  gl_FragColor = vec4(Ka * ambientColor +
+                      Kd * diffuseColor +
+		      Ks * specular * specularColor, 1.0);
+		      */
 }
 `;
   return this.g.Program(options);
@@ -111,8 +143,16 @@ let init = function()
   this.prag["bg"] = this.create_prag_bg(this.gl, this.m.caM._data, this.vbo["bg"]);
 
   this.cam.init();
-  this.cam.glFrustum(-10, 10, -10, 10, 5, 100);
-  this.cam.gluLookAt(-5, 3, -20, 0, 3, 0, 0, 1, 0);
+  //this.cam.glFrustum(-10, 10, -10, 10, 5, 100);
+  this.cam.fovInDegrees = 60;
+  this.cam.zfar = 50;
+  this.cam.znear = 1;
+  this.cam.glhPerspectivef2_helper();
+  //this.cam.gluLookAt(-5, 3, -20, 0, 3, 0, 0, 1, 0);
+  this.cam.set_pos(-5, 3, -20);
+  this.cam.set_center(0, 3, 0);
+  this.cam.set_up(0, 1, 0);
+  this.cam.gluLookAt_helper();
 
   this.m["stl"] = this.g.matrix(Float32Array, 6, 0);
   this.vbo["stl"] = this.g.VBO({gl: this.gl, m: this.m["stl"]});
@@ -154,10 +194,12 @@ let draw = function(x, y, w, h)
   this.win_bounds[3] = h;
   this.gl.viewport(x, this.height - h - y, w, h);
   this.vbo["bg"].reload();
+  this.gl.enable(this.gl.DEPTH_TEST);
   this.prag["bg"].run(this.prog["bg"], draw_quad, { gl: this.gl })
 
   this.prag["stl"].run(this.prog["stl"], draw_stl, { gl: this.gl, n: this.m["stl"]._m })
   this.gl.viewport(0, 0, this.width, this.height);
+  this.gl.disable(this.gl.DEPTH_TEST);
 }
 
 let u8a2f32 = function(arr, i)
@@ -199,6 +241,11 @@ let input = function(input_arr)
 {
 }
 
+let rot = function(dx, dy)
+{
+  this.cam.rot(dx, dy);
+}
+
 let stlviewer = function(g)
 {
   return {
@@ -223,6 +270,7 @@ let stlviewer = function(g)
     create_prag_bg: create_prag_bg,
     create_prog_bg: create_prog_bg,
     cam: g.camera(g), 
+    rot: rot,
   };
 }
 

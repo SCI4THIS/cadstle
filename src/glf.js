@@ -211,7 +211,6 @@ let init = function(gl)
 {
   this.gl = gl;
 
-  console.log(this);
   this.m["caM"] = this.g.matrix(Float32Array, 4, 4);
   this.m["caM"].identity();
 

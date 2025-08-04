@@ -401,6 +401,12 @@ let nk_fxs = {
       download(file);
       console.log(file);
     },
+    stlviewer_rot: function(f32_1, f32_2) {
+      let dx = f32_1;
+      let dy = f32_2;
+      g.stlviewer.rot(dx, dy);
+      g.nuklear.queue_display();
+    },
     cadstle_set_stl_gl: function(i32_1, i32_2) {
       let stl = i32_1;
       let len = i32_2;

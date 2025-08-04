@@ -116,19 +116,26 @@ function main()
   g.import_object = import_object;
 
   const compileOptions = { };
-
+  loadlog("Instantiating WebAssembly");
+  //g.w3is(
   WebAssembly.instantiateStreaming(
     fetch(g.dataurls["./nuklear.wasm"]),
     import_object, compileOptions).then(
       function (obj) {
+        loadlog("Instantiated WebAssembly");
         g.wasm = obj;
         g.wasm_memory = obj.instance.exports.memory;
         g.memory = new Uint8Array(g.wasm_memory.buffer);
         g.memory_grow = memory_grow;
         g.nuklear.wasm = obj;
+        loadlog("Starting display");
         g.gl.init();
         g.gl.display();
         handler_subscribe();
+        loadlog("Start main loop");
+    },
+    function (err) {
+        loadlog(err)
     }
   )
 }
@@ -136,7 +143,7 @@ function main()
 function start_check()
 {
   if (g.modules_i == g.modules_n && g.dataurls_i == g.dataurls_n) {
-    loadlog("finished!");
+    loadlog("finished loading data");
     g.finished_cb();
   }
 }
@@ -146,7 +153,11 @@ function require(filename)
   let require_cb = function(text)
   {
     let module = { exports: { } };
-    eval(text);
+    try {
+      eval(text);
+    } catch (e) {
+      loadlog("Failed " + filename + ": " + e);
+    }
     g.modules[filename] = module.exports;
     g.modules_i++;
     start_check();

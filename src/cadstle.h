@@ -5,6 +5,7 @@
 
 typedef enum {
   GENERATOR_GREEK_COLUMNS,
+  GENERATOR_GREEK_CORINTHIAN_COLUMN,
 } generator_t;
 
 typedef struct {

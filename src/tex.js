@@ -60,7 +60,7 @@ uniform   mat4  caM;
 
 void main() {
   st = texCoord;
-  gl_Position = caM * vec4(coord.x, coord.y, 0.0, 1.0);
+  gl_Position = caM * vec4(coord.x, coord.y, 1.0, 1.0);
 }
 `;
 

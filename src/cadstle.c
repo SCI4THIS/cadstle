@@ -26,13 +26,14 @@
 #include "nuklear.h"
 #include "cadstle.h"
 
-const char *generators[] = { "Greek Columns" };
+const char *generators[] = { "Greek Columns", "Corinthian Column" };
 
 void make3DNoiseTexture();
 extern unsigned char *Noise3DTexPtr;
 extern int Noise3DTexSize;
 extern void cadstle_download(uint32_t size, stl_t *stl);
 extern void cadstle_set_stl_gl(void *stl, uint32_t len);
+extern void stlviewer_rot(float dx, float dy);
 extern float cosf(float);
 extern float sinf(float);
 const float M_PI = 3.14159265358979323846264338327950288f;
@@ -201,38 +202,41 @@ void nk_app_parameters_greek_columns(struct nk_context *ctx, int win_wd, int win
     float n_x      = cosf((theta + theta_2) / 2.0f);
     float n_y      = sinf((theta + theta_2) / 2.0f);
 
-    assign_pt(&(*stl)->tri[j].data[0],    0 , 0  ,-1.0f);
+    assign_pt(&(*stl)->tri[j].data[0],    0 , -1.0f  ,0);
     assign_pt(&(*stl)->tri[j].data[12], 0 , 0 , 0);
-    assign_pt(&(*stl)->tri[j].data[24], x1, y1, 0);
-    assign_pt(&(*stl)->tri[j].data[36], x2, y2, 0);
+    assign_pt(&(*stl)->tri[j].data[24], x2, 0, y2);
+    assign_pt(&(*stl)->tri[j].data[36], x1, 0, y1);
     j++;
 
-    assign_pt(&(*stl)->tri[j].data[0],    0 , 0  , 1.0f);
-    assign_pt(&(*stl)->tri[j].data[12], 0 , 0 , ht);
-    assign_pt(&(*stl)->tri[j].data[24], x1, y1, ht);
-    assign_pt(&(*stl)->tri[j].data[36], x2, y2, ht);
+    assign_pt(&(*stl)->tri[j].data[0],    0 , 1.0f  , 0);
+    assign_pt(&(*stl)->tri[j].data[12], 0 , ht, 0);
+    assign_pt(&(*stl)->tri[j].data[24], x1, ht, y1);
+    assign_pt(&(*stl)->tri[j].data[36], x2, ht, y2);
     j++;
 
-    assign_pt(&(*stl)->tri[j].data[0],    n_x , n_y, 0);
-    assign_pt(&(*stl)->tri[j].data[12], x1, y1, ht);
-    assign_pt(&(*stl)->tri[j].data[24], x2, y2, 0);
-    assign_pt(&(*stl)->tri[j].data[36], x2, y2, ht);
+    assign_pt(&(*stl)->tri[j].data[0],    n_x , 0, n_y);
+    assign_pt(&(*stl)->tri[j].data[12], x1, ht, y1);
+    assign_pt(&(*stl)->tri[j].data[24], x2, 0, y2);
+    assign_pt(&(*stl)->tri[j].data[36], x2, ht, y2);
     j++;
 
-    assign_pt(&(*stl)->tri[j].data[0],    n_x , n_y, 0);
-    assign_pt(&(*stl)->tri[j].data[12], x1, y1, ht);
-    assign_pt(&(*stl)->tri[j].data[24], x2, y2, 0);
-    assign_pt(&(*stl)->tri[j].data[36], x1, y1, 0);
+    assign_pt(&(*stl)->tri[j].data[0],    n_x , 0, n_y);
+    assign_pt(&(*stl)->tri[j].data[12], x1, ht, y1);
+    assign_pt(&(*stl)->tri[j].data[24], x1, 0, y1);
+    assign_pt(&(*stl)->tri[j].data[36], x2, 0, y2);
     j++;
   }
   cadstle_set_stl_gl(*stl, sizeof((*stl)->h) + (*stl)->h.n * sizeof((*stl)->tri[0]));
 }
+
+#include "AI/nk_app_corinthian_column.c"
 
 void nk_app_parameters(struct nk_context *ctx, int width, int height, generator_t gen_id, stl_t **stl)
 {
   if (nk_group_begin(ctx, "parameters", 0)) {
     switch (gen_id) {
       case GENERATOR_GREEK_COLUMNS: nk_app_parameters_greek_columns(ctx, width, height, stl); break;
+      case GENERATOR_GREEK_CORINTHIAN_COLUMN: nk_app_corinthian_column(ctx, width, height, stl); break;
     }
     nk_group_end(ctx);
   }
@@ -245,7 +249,10 @@ void nk_app_viewer(struct nk_context *ctx, int width, int height, generator_t ge
   static nk_bool is_initialized = nk_false;
   static struct nk_image stl_viewer_img = { 0 };
   struct nk_rect header = nk_rect(NAV_WIDTH, NAV_HEIGHT, width - NAV_WIDTH, height - NAV_HEIGHT);
-  int dy;
+  static int last_x;
+  static int last_y;
+  static int dy;
+  static int dx;
 
   if (!is_initialized) {
     stl_viewer_img = nk_image_ptr("stlviewer.glsl");
@@ -257,7 +264,14 @@ void nk_app_viewer(struct nk_context *ctx, int width, int height, generator_t ge
       printf("stlviewer click - done");
     }
     if (nk_input_has_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_MIDDLE, header, nk_true)) {
+      if (is_mid_btn_dragging) {
+        dx = ctx->input.mouse.pos.x - last_x;
+        dy = ctx->input.mouse.pos.y - last_y;
+	stlviewer_rot((float)dx / header.w, (float)dy / header.h);
+      }
       is_mid_btn_dragging = nk_true;
+      last_x = ctx->input.mouse.pos.x;
+      last_y = ctx->input.mouse.pos.y;
       printf("stlviewer click");
     } 
     dy = ctx->input.mouse.scroll_delta.y;
@@ -270,6 +284,7 @@ void nk_app_viewer(struct nk_context *ctx, int width, int height, generator_t ge
     nk_group_end(ctx);
   }
 }
+
 
 void nk_app_main(struct nk_context *ctx, int width, int height)
 {
