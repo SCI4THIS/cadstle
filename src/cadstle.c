@@ -26,7 +26,7 @@
 #include "nuklear.h"
 #include "cadstle.h"
 
-const char *generators[] = { "Greek Columns", "Corinthian Column", "Column adorned with crosses" };
+const char *generators[] = { "Greek Columns", "Corinthian Column", "Column adorned with crosses", "Column adorned with acanthus leaves" };
 
 void make3DNoiseTexture();
 extern unsigned char *Noise3DTexPtr;
@@ -36,6 +36,7 @@ extern void cadstle_set_stl_gl(void *stl, uint32_t len);
 extern void stlviewer_rot(float dx, float dy);
 extern float cosf(float);
 extern float sinf(float);
+extern float sqrtf(float);
 const float M_PI = 3.14159265358979323846264338327950288f;
 
 void set_style_local(struct nk_context *ctx)
@@ -229,6 +230,7 @@ void nk_app_parameters_greek_columns(struct nk_context *ctx, int win_wd, int win
 }
 
 #include "AI/nk_app_corinthian_column.c"
+#include "AI/nk_app_gen_column_adorn_acanthus.c"
 
 typedef struct {
   float radius;
@@ -691,6 +693,7 @@ void nk_app_parameters(struct nk_context *ctx, int width, int height, generator_
       case GENERATOR_GREEK_COLUMNS: nk_app_parameters_greek_columns(ctx, width, height, stl); break;
       case GENERATOR_GREEK_CORINTHIAN_COLUMN: nk_app_corinthian_column(ctx, width, height, stl); break;
       case GEN_COLUMN_ADORN_CROSS: nk_app_gen_column_adorn_cross(ctx, width, height, stl); break;
+      case GEN_COLUMN_ADORN_ACANTHUS: nk_app_gen_column_adorn_acanthus(ctx, width, height, stl); break;
     }
     nk_group_end(ctx);
   }

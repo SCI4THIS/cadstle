@@ -277,6 +277,15 @@ let rand = function () {
   return MATH_RAND * Math.random();
 }
 
+wasm3_proto["sqrt"] = "f(f)";
+let sqrt = function (f32) {
+  let ret = Math.sqrt(f32);
+  if (DEBUG_FUNCTION_PRINTS) {
+    console.log("sqrt(" + f32 + ") = " + ret);
+  }
+  return ret;
+}
+
 wasm3_proto["cos"] = "f(f)";
 let cos = function (f32) {
   let ret = Math.cos(f32);
@@ -850,6 +859,8 @@ let __extenddftf2 = function(i32_1, f64_1) {
       atof:          atof,
       calloc:        calloc,
       clock:         clock,
+      sqrt:          sqrt,
+      sqrtf:         sqrt,
       cos:           cos,
       cosf:          cos,
       fflush:        fflush,
