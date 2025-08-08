@@ -116,7 +116,7 @@ void main() {
     float specAngle = max(dot(R, V), 0.0);
     specular = pow(specAngle, shininess);
   }
-  gl_FragColor = vec4(norm_varying, 1.0);
+  gl_FragColor = vec4(norm_varying.x, norm_varying.y, -norm_varying.z, 1.0);
   /*
   gl_FragColor = vec4(Ka * ambientColor +
                       Kd * diffuseColor +
