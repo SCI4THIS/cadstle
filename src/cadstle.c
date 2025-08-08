@@ -270,7 +270,7 @@ int nk_app_gen_column_adorn_cross_sub(struct nk_context *ctx, stl_t **stl, nk_ap
   j++;
 
   if (stl != NULL) {
-    assign_pt(&(*stl)->tri[j].data[0],  ROT_X(0.0f, 1.0f), 0.0f, ROT_Z(0.0f, 1.0f));
+    assign_pt(&(*stl)->tri[j].data[0],  ROT_X(1.0f, 0.0f), 0.0f, ROT_Z(1.0f, 0.0f));
     assign_pt(&(*stl)->tri[j].data[12], ROT_X(d, d2), y_bot, ROT_Z(d, d2));
     assign_pt(&(*stl)->tri[j].data[24], ROT_X(d, d2), y_top, ROT_Z(d, d2));
     assign_pt(&(*stl)->tri[j].data[36], ROT_X(d,-d2), y_bot, ROT_Z(d,-d2));
@@ -278,7 +278,7 @@ int nk_app_gen_column_adorn_cross_sub(struct nk_context *ctx, stl_t **stl, nk_ap
   j++;
 
   if (stl != NULL) {
-    assign_pt(&(*stl)->tri[j].data[0],  ROT_X(0.0f, 1.0f), 0.0f, ROT_Z(0.0f, 1.0f));
+    assign_pt(&(*stl)->tri[j].data[0],  ROT_X(1.0f, 0.0f), 0.0f, ROT_Z(1.0f, 0.0f));
     assign_pt(&(*stl)->tri[j].data[12], ROT_X(d,-d2), y_bot, ROT_Z(d,-d2));
     assign_pt(&(*stl)->tri[j].data[24], ROT_X(d, d2), y_top, ROT_Z(d, d2));
     assign_pt(&(*stl)->tri[j].data[36], ROT_X(d,-d2), y_top, ROT_Z(d,-d2));
@@ -286,7 +286,7 @@ int nk_app_gen_column_adorn_cross_sub(struct nk_context *ctx, stl_t **stl, nk_ap
   j++;
 
   if (stl != NULL) {
-    assign_pt(&(*stl)->tri[j].data[0],  ROT_X(0.0f, -1.0f), 0.0f, ROT_Z(0.0f, -1.0f));
+    assign_pt(&(*stl)->tri[j].data[0],  ROT_X(-1.0f, 0.0f), 0.0f, ROT_Z(-1.0f, 0.0f));
     assign_pt(&(*stl)->tri[j].data[12], ROT_X(0, d2), y_bot, ROT_Z(0, d2));
     assign_pt(&(*stl)->tri[j].data[24], ROT_X(0, d2), y_top, ROT_Z(0, d2));
     assign_pt(&(*stl)->tri[j].data[36], ROT_X(0,-d2), y_bot, ROT_Z(0,-d2));
@@ -294,7 +294,7 @@ int nk_app_gen_column_adorn_cross_sub(struct nk_context *ctx, stl_t **stl, nk_ap
   j++;
 
   if (stl != NULL) {
-    assign_pt(&(*stl)->tri[j].data[0],  ROT_X(0.0f, -1.0f), 0.0f, ROT_Z(0.0f, -1.0f));
+    assign_pt(&(*stl)->tri[j].data[0],  ROT_X(-1.0f, 0.0f), 0.0f, ROT_Z(-1.0f, 0.0f));
     assign_pt(&(*stl)->tri[j].data[12], ROT_X(0,-d2), y_bot, ROT_Z(0,-d2));
     assign_pt(&(*stl)->tri[j].data[24], ROT_X(0, d2), y_top, ROT_Z(0, d2));
     assign_pt(&(*stl)->tri[j].data[36], ROT_X(0,-d2), y_top, ROT_Z(0,-d2));
