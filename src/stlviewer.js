@@ -145,7 +145,7 @@ let init = function()
   this.cam.init();
   //this.cam.glFrustum(-10, 10, -10, 10, 5, 100);
   this.cam.fovInDegrees = 60;
-  this.cam.zfar = 50;
+  this.cam.zfar = 5000;
   this.cam.znear = 1;
   this.cam.glhPerspectivef2_helper();
   //this.cam.gluLookAt(-5, 3, -20, 0, 3, 0, 0, 1, 0);
@@ -174,6 +174,7 @@ let resize = function({width, height})
   this.height = height;
   this.width = width;
   this.cam.resize({width, height})
+  this.cam.rot(0,0)
 }
 
 let draw_quad = function(arg)

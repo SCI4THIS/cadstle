@@ -8,6 +8,7 @@ typedef enum {
   GENERATOR_GREEK_CORINTHIAN_COLUMN,
   GEN_COLUMN_ADORN_CROSS,
   GEN_COLUMN_ADORN_ACANTHUS,
+  GEN_SOIC_CLIP_SIDE,
 } generator_t;
 
 typedef struct {
